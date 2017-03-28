@@ -1,0 +1,11 @@
+TCL: tool command language 工具命令语言
+1.1TCL外壳应用程序： tclsh
+例程：
+expr 2 + 2
+每条命令第一个单词是要执行的命令名。
+TCL中所有的值都有字符串表达形式，其中一部分有效率更高的内部表达形式。
+1.2 TCL一个很重要的拓展是由TK工具集提供的视窗命令，TK提供的命令可用于创建图形用户界面。
+使用wish(windows shell)打开并运行脚本。
+
+http://www.ibm.com/developerworks/cn/aix/library/au-unix-getopt.html
+
