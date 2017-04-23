@@ -131,3 +131,102 @@ public class BlinkActivity extends Activity {
         }
     };
 }
+4¡¢Reading from an input
+To read a GPIO port as an input:
+¢Ù Configure it as an input using setDirection() with the mode DIRECTION_IN.
+¢Ú Configure either a high (near IOREF) or low (near zero) voltage signal to be returned as true (active), by calling setActiveType() with ACTIVE_HIGH or ACTIVE_LOW.
+Access the current state with the getValue() method.
+¢Û The following code shows you how to set up an input with an active state associated with a high voltage level:
+
+public void configureInput(Gpio gpio) throws IOException {
+    // Initialize the pin as an input
+    gpio.setDirection(Gpio.DIRECTION_IN);
+    // High voltage is considered active
+    gpio.setActiveType(Gpio.ACTIVE_HIGH);
+
+    ...
+
+    // Read the active high pin state
+    if (gpio.getValue()) {
+        // Pin is HIGH
+    } else {
+        // Pin is LOW
+    }
+}
+5¡¢Writing to an output
+To programmatically control the state of a GPIO port:
+
+¢Ù Configure it as an output using setDirection() with the mode DIRECTION_OUT_INITIALLY_HIGH or DIRECTION_OUT_INITIALLY_LOW. These modes ensure that the port's initial state is also set correctly at configuration time.
+¢Ú Configure either a high (near IOREF) or low (near zero) voltage signal to be returned as true (active), by calling setActiveType() with ACTIVE_HIGH or ACTIVE_LOW.
+Set the current state with the setValue() method.
+¢Û The following code shows you how to set up an output to initially be high, then toggle its state to low using the setValue() method:
+
+public void configureOutput(Gpio gpio) throws IOException {
+    // Initialize the pin as a high output
+    gpio.setDirection(Gpio.DIRECTION_OUT_INITIALLY_HIGH);
+    // Low voltage is considered active
+    gpio.setActiveType(Gpio.ACTIVE_LOW);
+
+    ...
+
+    // Toggle the value to be LOW
+    gpio.setValue(true);
+}
+6¡¢PWM
+Managing the connection
+In order to open a connection to a PWM port, you need to know the unique port name. During the initial stages of development, or when porting an app to new hardware, it's helpful to discover all the available port names from PeripheralManagerService using getPwmList():
+
+PeripheralManagerService manager = new PeripheralManagerService();
+List<String> portList = manager.getPwmList();
+if (portList.isEmpty()) {
+    Log.i(TAG, "No PWM port available on this device.");
+} else {
+    Log.i(TAG, "List of available ports: " + portList);
+}
+
+Once you know the target name, use PeripheralManagerService to connect to that port. When you are done communicating with the PWM port, close the connection to free up resources. Additionally, you cannot open a new connection to the port until the existing connection is closed. To close the connection, use the port's close() method.
+
+public class HomeActivity extends Activity {
+    // PWM Name
+    private static final String PWM_NAME = ...;
+
+    private Pwm mPwm;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // Attempt to access the PWM port
+        try {
+            mPwm = mPeripheralManager.openPwm(PWM_NAME);
+        } catch (IOException e) {
+            Log.w(TAG, "Unable to access PWM", e);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (mPwm != null) {
+            try {
+                mPwm.close();
+                mPwm = null;
+            } catch (IOException e) {
+                Log.w(TAG, "Unable to close PWM", e);
+            }
+        }
+    }
+}
+
+Configuring and controlling the PWM signal
+After making a connection, configure the timing parameters for the PWM signal. You must set these parameters before activating the signal the first time. To activate the PWM signal, call setEnabled(true). If you need to temporarily de-activate the signal, you can call setEnabled(false).
+The following example configures the PWM to cycle at 120Hz (period of 8.33ms) with a duty of 25% (on-time of 2.08ms every cycle):
+
+public void initializePwm(Pwm pwm) throws IOException {
+    pwm.setPwmFrequencyHz(120);
+    pwm.setPwmDutyCycle(25);
+
+    // Enable the PWM signal
+    pwm.setEnabled(true);
+}
+
